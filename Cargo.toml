@@ -6,3 +6,28 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+num-bigint = "0.4"
+
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+
+#client portal binary
+[[bin]]
+    name = "client_portal"
+    path = "src/client/portal/main.rs"
+
+# client cli binary
+[[bin]]
+    name = "client_cli"
+    path = "src/client/cli/main.rs"
+
+
+#admin portal binary
+[[bin]]
+    name = "admin_portal"
+    path = "src/admin/portal/main.rs"
+#admin cli binary
+[[bin]]
+    name = "admin_cli"
+    path = "src/admin/cli/main.rs"
