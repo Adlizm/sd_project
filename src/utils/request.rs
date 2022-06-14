@@ -8,7 +8,6 @@ use super::{inputs, response::Response};
 pub enum RequestType{
 	CreateTask, UpdateTask, ListTasks, DeleteTask, DeleteAllTasks,
 	CreateClient, UpdateClient, GetClient, DeleteClient,
-	ExistClient
 }
 
 #[derive (Serialize, Deserialize)]

@@ -5,6 +5,7 @@ pub const USE_TASK: u8 = 0x02;
 pub const USE_BODY: u8 = 0x04;
 
 type OString = Option<String>;
+
 pub fn get(mask: u8) -> (OString, OString, OString) {
     let mut buf= String::new();
 

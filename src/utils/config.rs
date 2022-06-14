@@ -16,8 +16,6 @@ pub fn portal_admin_addrs() -> Vec<SocketAddr> {
     ]
 }
 
-
-
 pub fn pubsub_addr() -> SocketAddr {
     SocketAddr::from(([127, 0, 0, 1], 1843))
 }
