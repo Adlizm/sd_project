@@ -6,6 +6,10 @@ pub mod task;
 
 fn handle_client(mut stream: &TcpStream) {
     loop {
+        println!("------------- Client Menu -------------");
+        println!("Commands: create, update, list, delete");
+        println!("          delete-all, exit");
+
         let mut buf = String::new();
         std::io::stdin().read_line(&mut buf).unwrap();
         

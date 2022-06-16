@@ -6,6 +6,10 @@ pub mod client;
 
 fn handle_admin(mut stream: &TcpStream) {
     loop {
+        println!("------------- Admin Menu -------------");
+        println!("Commands: create, update, get, delete,");
+        println!("          exit");
+
         let mut buf = String::new();
         std::io::stdin().read_line(&mut buf).unwrap();
         

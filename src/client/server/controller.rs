@@ -19,21 +19,25 @@ impl TasksController {
         self.data.insert(cid, HashMap::new());
     }
 
-    pub fn create(&mut self, req: Request) -> Response {
+    pub fn delete_client(&mut self, cid: String) {
+        self.data.remove(&cid);
+    }
+
+    pub fn create(&mut self, req: &Request) -> Response {
         if None == req.cid || None == req.task || None == req.body {
             return Response::Error("Incomplet arguments".to_string());
         }
-        let cid = req.cid.unwrap();
-        let name = req.task.unwrap();
-        let body = req.body.unwrap();
+        let cid = req.cid.as_ref().unwrap();
+        let name = req.task.as_ref().unwrap();
+        let body = req.body.as_ref().unwrap();
         
-        if self.data.contains_key(&cid) {
-            let tasks_table = self.data.get(&cid).unwrap();
+        if self.data.contains_key(cid) {
+            let tasks_table = self.data.get(cid).unwrap();
 
-            if !tasks_table.contains_key(&name) {
-                match DataTask::from_string(body) {
+            if !tasks_table.contains_key(name) {
+                match DataTask::from_string(body.to_string()) {
                     Ok(task) => {
-                        self.data.get_mut(&cid).unwrap().insert(name, task);
+                        self.data.get_mut(cid).unwrap().insert(name.to_string(), task);
                         return Response::Sucess("Task created with sucess".to_string());
                     }
                     Err(e) => {
@@ -46,21 +50,21 @@ impl TasksController {
         return Response::Error("Client id not found".to_string());
     }
 
-    pub fn update(&mut self, req: Request) -> Response {
+    pub fn update(&mut self, req: &Request) -> Response {
         if None == req.cid || None == req.task || None == req.body {
             return Response::Error("Incomplet arguments".to_string());
         }
-        let cid = req.cid.unwrap();
-        let name = req.task.unwrap();
-        let body = req.body.unwrap();
+        let cid = req.cid.as_ref().unwrap();
+        let name = req.task.as_ref().unwrap();
+        let body = req.body.as_ref().unwrap();
         
-        if self.data.contains_key(&cid) {
-            let tasks_table = self.data.get(&cid).unwrap();
+        if self.data.contains_key(cid) {
+            let tasks_table = self.data.get(cid).unwrap();
 
-            if tasks_table.contains_key(&name) {
-                match DataTask::from_string(body) {
+            if tasks_table.contains_key(name) {
+                match DataTask::from_string(body.to_string()) {
                     Ok(task) => {
-                        self.data.get_mut(&cid).unwrap().insert(name, task);
+                        self.data.get_mut(cid).unwrap().insert(name.to_string(), task);
                         return Response::Sucess("Task created with sucess".to_string());
                     }
                     Err(e) => {
@@ -73,14 +77,14 @@ impl TasksController {
         return Response::Error("Client id not found".to_string());
     }
 
-    pub fn list(&mut self, req: Request) -> Response {
+    pub fn list(&mut self, req: &Request) -> Response {
         if None == req.cid {
             return Response::Error("Incomplet arguments".to_string())
         }
-        let cid = req.cid.unwrap();
+        let cid = req.cid.as_ref().unwrap();
 
-        if self.data.contains_key(&cid) {
-            let tasks = self.data.get(&cid).unwrap().into_iter()
+        if self.data.contains_key(cid) {
+            let tasks = self.data.get(cid).unwrap().into_iter()
                 .map(|(task, data)| { format!("{} - {:?}", task, data)})
                 .reduce(|tasks, task| { format!("{}\n{}", tasks, task) });
 
@@ -91,18 +95,18 @@ impl TasksController {
         return Response::Error("Client id not found".to_string())
     }
 
-    pub fn delete(&mut self, req: Request) -> Response {
+    pub fn delete(&mut self, req: &Request) -> Response {
         if None == req.cid || None == req.task {
             return Response::Error("Incomplet arguments".to_string());
         }
-        let cid = req.cid.unwrap();
-        let name = req.task.unwrap();
+        let cid = req.cid.as_ref().unwrap();
+        let name = req.task.as_ref().unwrap();
         
-        if self.data.contains_key(&cid) {
-            let tasks_table = self.data.get(&cid).unwrap();
+        if self.data.contains_key(cid) {
+            let tasks_table = self.data.get(cid).unwrap();
 
-            if tasks_table.contains_key(&name) {
-                self.data.get_mut(&cid).unwrap().remove(&name);
+            if tasks_table.contains_key(name) {
+                self.data.get_mut(cid).unwrap().remove(name);
                 return Response::Sucess("Task deleted with sucess".to_string());
             }
             return Response::Error("Task not found".to_string())
@@ -110,22 +114,16 @@ impl TasksController {
         return Response::Error("Client id not found".to_string())
     }
     
-    pub fn delete_all(&mut self, req: Request) -> Response {
+    pub fn delete_all(&mut self, req: &Request) -> Response {
         if None == req.cid {
             return Response::Error("Incomplet arguments".to_string());
         }
-        let cid = req.cid.unwrap();
+        let cid = req.cid.as_ref().unwrap();
         
-        if self.data.contains_key(&cid) {
-            self.data.get_mut(&cid).unwrap().clear();
+        if self.data.contains_key(cid) {
+            self.data.get_mut(cid).unwrap().clear();
             return Response::Sucess("Tasks deleted with sucess".to_string());
         }
         return Response::Error("Client id not found".to_string());
-    }
-}
-
-impl Clone for TasksController {
-    fn clone(&self) -> Self {
-        Self { data: self.data.clone() }
     }
 }

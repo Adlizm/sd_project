@@ -19,12 +19,13 @@ impl ClientController {
         }
     }
 
-    pub fn create(&mut self, req: Request) -> Response {
+    pub fn create(&mut self, req: &Request) -> Response {
         if req.body == None {
             return Response::Error("Incomplet argumets".to_string());
         }
 
-        match DataClient::from_string(req.body.unwrap()) {
+        let data = req.body.as_ref().unwrap();
+        match DataClient::from_string(data.to_string()) {
             Ok(data) => {
                 let cid = self.clients.to_string();
                 self.data.insert(self.clients.to_string(), data);
@@ -37,16 +38,17 @@ impl ClientController {
         }
     }
 
-    pub fn update(&mut self, req: Request) -> Response {
+    pub fn update(&mut self, req: &Request) -> Response {
         if req.cid == None || req.body == None {
             return Response::Error("Incomplet argumets".to_string());
         }
 
-        let cid = req.cid.unwrap();
-        if self.data.contains_key(&cid) {
-            match DataClient::from_string(req.body.unwrap()) {
+        let cid = req.cid.as_ref().unwrap();
+        if self.data.contains_key(cid) {
+            let data = req.body.as_ref().unwrap();
+            match DataClient::from_string(data.to_string()) {
                 Ok(data) => {
-                    self.data.insert(cid, data);
+                    self.data.insert(cid.to_string(), data);
                     return Response::Sucess("Client updated with sucess!".to_string());
                 },
                 Err(e) => {
@@ -57,14 +59,14 @@ impl ClientController {
         return Response::Error("Client not found".to_string());
     }
 
-    pub fn get(&mut self, req: Request) -> Response {
+    pub fn get(&mut self, req: &Request) -> Response {
         if req.cid == None{
             return Response::Error("Incomplet argumets".to_string());
         }
 
-        let cid = req.cid.unwrap();
-        if self.data.contains_key(&cid) {
-            let data = self.data.get(&cid).unwrap();
+        let cid = req.cid.as_ref().unwrap();
+        if self.data.contains_key(cid) {
+            let data = self.data.get(cid).unwrap();
 
             match DataClient::to_string(data) {
                 Ok(data) => {
@@ -78,14 +80,14 @@ impl ClientController {
         return Response::Error("Client not found".to_string());
     }
 
-    pub fn delete(&mut self, req: Request) -> Response {
+    pub fn delete(&mut self, req: &Request) -> Response {
         if req.cid == None{
             return Response::Error("Incomplet argumets".to_string());
         }
 
-        let cid = req.cid.unwrap();
-        if self.data.contains_key(&cid) {
-            self.data.remove(&cid);
+        let cid = req.cid.as_ref().unwrap();
+        if self.data.contains_key(cid) {
+            self.data.remove(cid);
             return Response::Sucess("Cliet deleted with sucess".to_string());
         }
         return Response::Error("Client not found".to_string())
