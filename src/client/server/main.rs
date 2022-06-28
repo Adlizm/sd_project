@@ -1,9 +1,11 @@
+extern crate mosquitto_client as mosq;
+
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::sync::{Mutex, Arc};
 use std::thread;
 
-use mosquitto_client::Mosquitto;
+use mosq::Mosquitto;
 
 use controller::TasksController;
 use sd_project::utils::{config, response::Response};
@@ -12,7 +14,6 @@ use sd_project::utils::request::{Request, RequestType};
 pub mod controller;
 
 fn handle_client(mut stream: &TcpStream, controller: Arc<Mutex<TasksController>>, mqtt: &Mosquitto) {
-    println!("Connect {:?} with sucess! ", stream.local_addr());
     loop {
         let mut buf = String::new();
         
@@ -65,7 +66,7 @@ fn main () {
     let listener = TcpListener::bind(config::portal_client_addrs().as_slice()).unwrap();
         
     let pubsub_addr = config::pubsub_addr();
-    let m = mosquitto_client::Mosquitto::new("client");
+    let m = Mosquitto::new("client");
     m.connect(pubsub_addr.0, pubsub_addr.1).unwrap();
 
     m.subscribe("client/create", 0).unwrap();

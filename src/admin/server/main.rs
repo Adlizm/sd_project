@@ -1,9 +1,11 @@
+extern crate mosquitto_client as mosq;
+
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::sync::{Mutex, Arc};
 use std::thread;
 
-use mosquitto_client::Mosquitto;
+use mosq::Mosquitto;
 
 use controller::ClientController;
 use sd_project::utils::{config, response::Response};
@@ -64,7 +66,7 @@ fn main () {
     let listener = TcpListener::bind(config::portal_client_addrs().as_slice()).unwrap();
         
     let pubsub_addr = config::pubsub_addr();
-    let m = mosquitto_client::Mosquitto::new("admin");
+    let m = Mosquitto::new("admin");
     m.connect(pubsub_addr.0, pubsub_addr.1).unwrap();
 
     m.subscribe("client/create", 0).unwrap();
