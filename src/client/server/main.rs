@@ -39,7 +39,7 @@ fn handle_client(mut stream: &TcpStream, controller: Arc<Mutex<TasksController>>
                     }
 
                     let payload = req.to_string();
-                    if let Ok(topic) = request_to_topic(req) {
+                    if let Ok(topic) = topic_from_request(req) {
                         mqtt.publish(topic, payload.as_bytes(), 0, false).unwrap();
                     }
                 }
@@ -50,7 +50,7 @@ fn handle_client(mut stream: &TcpStream, controller: Arc<Mutex<TasksController>>
     println!("Disconnect {:?} with sucess! ", stream.local_addr());
 }
 
-fn request_to_topic(req: Request) -> Result<&'static str, &'static str> {
+fn topic_from_request(req: Request) -> Result<&'static str, &'static str> {
     match req.req {
         RequestType::CreateTask => Ok("task/create"),
         RequestType::UpdateTask => Ok("task/update"),
