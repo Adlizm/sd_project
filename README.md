@@ -27,7 +27,7 @@ Um simples projeto cliente-servidor para usar os conhecimentos sobre sistemas di
 
 - Em diferentes terminais, inicialize os portais
 ```bash
-  python ./src/admin.py
+  python ./src/admin_portal.py
   python ./src/client_portal.py
 ```
 
@@ -43,7 +43,6 @@ Para rodar os testes, rode o seguinte comando
 ```bash
   python ./test.py
 ```
-
 
 ## Funcionalidades
 
