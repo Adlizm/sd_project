@@ -10,17 +10,26 @@ Um simples projeto cliente-servidor para usar os conhecimentos sobre sistemas di
 
 ### Preparando o ambiente
 
-- Instale a dependencia paho-mqtt
+- Instale a dependencia python-etcd3
 ```bash
-  pip3 install paho-mqtt
+  pip3 install git+https://github.com/kragniz/python-etcd3.git
 ```
 
-- Certifique que tenha um broker MQTT rodando localmente na porta 1883.
-  
-  Caso não possua, siga as instruções de instalação em:
-  https://mosquitto.org/download/
+- Caso não possua o etcd instalado, siga as instruções de instalação em:
+  https://etcd.io/docs/v3.6/install/
 ```bash
-  mosquitto -v
+  etcd --version
+```
+
+- Em terminais diferentes execute (disponivel em etcd_commands):
+```bash
+  etcd --name replica1 --data-dir /temp/etcd/replica1 --listen-client-urls http://localhost:12379 --advertise-client-urls http://localhost:12379 --listen-peer-urls http://localhost:12380 --initial-advertise-peer-urls http://localhost:12380 --initial-cluster replica1=http://localhost:12380,replica2=http://localhost:22380,replica3=http://localhost:32380 --initial-cluster-token tkn --initial-cluster-state new
+```
+```bash
+  etcd --name replica2 --data-dir /temp/etcd/replica2 --listen-client-urls http://localhost:22379 --advertise-client-urls http://localhost:22379 --listen-peer-urls http://localhost:22380 --initial-advertise-peer-urls http://localhost:22380 --initial-cluster replica1=http://localhost:12380,replica2=http://localhost:22380,replica3=http://localhost:32380 --initial-cluster-token tkn --initial-cluster-state new
+```
+```bash
+  etcd --name replica3 --data-dir /temp/etcd/replica3 --listen-client-urls http://localhost:32379 --advertise-client-urls http://localhost:32379 --listen-peer-urls http://localhost:32380 --initial-advertise-peer-urls http://localhost:32380 --initial-cluster replica1=http://localhost:12380,replica2=http://localhost:22380,replica3=http://localhost:32380 --initial-cluster-token tkn --initial-cluster-state new
 ```
 
 ### Inicializando projeto
@@ -50,10 +59,13 @@ Para rodar os testes, rode o seguinte comando
 - [x] Interface do Administrador com o Portal
 - [x] Portal do Administrador
 - [x] Portal do Cliente
-- [x] Testes
+
+- [x] Testes Automatizados
+- [x] Replica consistente dos dados
+- [x] Portais com Cache Local
+- [x] Suporte a múltiplos portais 
 
 ### Mecanismos de Comunicação
 - Comunicação entre cliente e portal via sockets
 - Comunicação entre admin e portal via sockets
-- Comunicação entre portais via pubsub
 

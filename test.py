@@ -8,56 +8,50 @@ from client.controller import TasksController
 from others.response import ResponseType
 from others.request import Request, RequestType
 from others.models import DataClient, DataTask
-
+from others.etcd import create_client_etcd
 
 class TestClientController(unittest.TestCase):
-    def test_json_converter(self):
-        data = DataClient(name='Boby', age=18).to_string()
-        self.assertEqual(data, "{\"name\": \"Boby\", \"age\": 18}")
-
-    def test_add_client(self):
-        cid, data = "1231", DataClient(name='Boby', age=18).to_string()
-        request = Request(RequestType.CreateClient, cid, None, data)
-        controller = ClientController()
-
-        response = controller.add_client(request)
-        self.assertTrue(response.status == ResponseType.Sucess, response.data)
-        self.assertIn(cid, controller.data)
-        self.assertEqual(controller.data[cid].to_string(), data)
+    def __init__(self, methodName: str = ...) -> None:
+        super().__init__(methodName)
+        self.controller = ClientController()
+        self.etcd = create_client_etcd()
 
     def test_create(self):
         data = DataClient(name='Boby', age=18).to_string()
         request = Request(RequestType.CreateClient, None, None, data)
-        controller = ClientController()
 
-        response, cid = controller.create(request)
+        response = self.controller.create(request, self.etcd)
+        cid = int(response.data[33::])
+
         self.assertTrue(response.status == ResponseType.Sucess, response.data)
-        self.assertIn(cid, controller.data)
-        self.assertEqual(controller.data[cid].to_string(), data)
+        self.assertIn(cid, self.controller.data)
+        self.assertEqual(self.controller.data[cid].to_string(), data)
 
     def test_update(self):
         data = DataClient(name='Boby', age=18)
         request = Request(RequestType.CreateClient, None, None, data.to_string())
-        controller = ClientController()
 
-        _, cid = controller.create(request)
+        response = self.controller.create(request, self.etcd)
+        cid = int(response.data[33::])
+        
         data.name = 'Cody'
         data.age = 42
         request = Request(RequestType.UpdateClient, cid, None, data.to_string())
-        response = controller.update(request)
+        response = self.controller.update(request, self.etcd)
 
         self.assertTrue(response.status == ResponseType.Sucess, response.data)
-        self.assertEqual(controller.data[cid].name, 'Cody')
-        self.assertEqual(controller.data[cid].age, 42)
+        self.assertEqual(self.controller.data[cid].name, 'Cody')
+        self.assertEqual(self.controller.data[cid].age, 42)
     
     def test_get(self):
         data = DataClient(name='Boby', age=18).to_string()
         request = Request(RequestType.CreateClient, None, None, data)
-        controller = ClientController()
 
-        _, cid = controller.create(request)
+        response = self.controller.create(request, self.etcd)
+        cid = int(response.data[33::])
+
         request = Request(RequestType.GetClient, cid, None, None)
-        response = controller.get(request)
+        response = self.controller.get(request, self.etcd)
 
         self.assertTrue(response.status == ResponseType.Sucess, response.data)
         self.assertEqual(response.data, data)
@@ -65,100 +59,86 @@ class TestClientController(unittest.TestCase):
     def test_delete(self):
         data = DataClient(name='Boby', age=18).to_string()
         request = Request(RequestType.CreateClient, None, None, data)
-        controller = ClientController()
 
-        _, cid = controller.create(request)
+        response = self.controller.create(request, self.etcd)
+        cid = int(response.data[33::])
+
         request = Request(RequestType.DeleteClient, cid, None, None)
-        response = controller.delete(request)
+        response = self.controller.delete(request, self.etcd)
 
         self.assertTrue(response.status == ResponseType.Sucess, response.data)
-        self.assertNotIn(cid, controller.data)
-
+        self.assertNotIn(cid, self.controller.data)
 
 class TestTaskController(unittest.TestCase):
+    def __init__(self, methodName: str = ...) -> None:
+        super().__init__(methodName)
+        self.controller = TasksController()
+        self.etcd = create_client_etcd()
+
+        data = DataClient(name='Boby', age=18).to_string()
+        request = Request(RequestType.CreateClient, None, None, data)
+        client_controller = ClientController()
+        response = client_controller.create(request, self.etcd)
+
+        self.cid = int(response.data[33:])
+    
     def test_json_converter(self):
         data = DataTask(description="task of math").to_string()
         self.assertEqual(data, "{\"description\": \"task of math\"}")
 
-    def test_new_client(self):
-        controller = TasksController()
-        cid = 1
-
-        controller.new_client(cid)
-        self.assertIn(cid, controller.data)
-    
-    def test_delete_client(self):
-        controller = TasksController()
-        cid = 1
-
-        controller.new_client(cid)
-        controller.delete_client(cid)
-        self.assertNotIn(cid, controller.data)
-
     def test_create(self):
-        controller = TasksController()
-        controller.new_client(1)
-
         data = DataTask(description="task of math").to_string()
-        request = Request(RequestType.CreateTask, 1, "homework", data)
-        response = controller.create(request)
+        request = Request(RequestType.CreateTask, self.cid, "homework", data)
+        response = self.controller.create(request, self.etcd)
 
         self.assertTrue(response.status == ResponseType.Sucess, response.data)
-        self.assertIn(1, controller.data)
-        self.assertIn("homework", controller.data[1])
-        self.assertEqual(controller.data[1]["homework"].description, "task of math")
+        self.assertIn(self.cid, self.controller.data)
+        self.assertIn("homework", self.controller.data[self.cid])
+        self.assertEqual(self.controller.data[self.cid]["homework"].description, "task of math")
 
     def test_update(self):
-        controller = TasksController()
-        controller.new_client(1)
+        data = DataTask(description="task of math")
+        request = Request(RequestType.CreateTask, self.cid, "homework", data.to_string())
+        response = self.controller.create(request, self.etcd)
+        self.assertTrue(response.status == ResponseType.Sucess, response.data)
 
-        data = DataTask(description="task of math").to_string()
-        request = Request(RequestType.CreateTask, 1, "homework", data)
-        response = controller.create(request)
-
-        data = DataTask(description="task of history").to_string()
-        request = Request(RequestType.UpdateTask, 1, "homework", data)
-        response = controller.update(request)
+        data.description = "task of history"
+        request = Request(RequestType.UpdateTask, self.cid, "homework", data.to_string())
+        response = self.controller.update(request, self.etcd)
 
         self.assertTrue(response.status == ResponseType.Sucess, response.data)
-        self.assertIn(1, controller.data)
-        self.assertIn("homework", controller.data[1])
-        self.assertEqual(controller.data[1]["homework"].description, "task of history")
+        self.assertIn(self.cid, self.controller.data)
+        self.assertIn("homework", self.controller.data[self.cid])
+        self.assertEqual(self.controller.data[self.cid]["homework"].description, "task of history")
 
     def test_delete(self):
-        controller = TasksController()
-        controller.new_client(1)
-
         data = DataTask(description="task of math").to_string()
-        request = Request(RequestType.CreateTask, 1, "homework", data)
-        response = controller.create(request)
+        request = Request(RequestType.CreateTask, self.cid, "homework", data)
+        response = self.controller.create(request, self.etcd)
 
-        request = Request(RequestType.DeleteTask, 1, "homework", None)
-        response = controller.delete(request)
+        request = Request(RequestType.DeleteTask, self.cid, "homework", None)
+        response = self.controller.delete(request, self.etcd)
 
         self.assertTrue(response.status == ResponseType.Sucess, response.data)
-        self.assertIn(1, controller.data)
-        self.assertNotIn("homework", controller.data[1])
+        self.assertIn(self.cid, self.controller.data)
+        self.assertNotIn("homework", self.controller.data[self.cid])
 
     def test_delete_all(self):
-        controller = TasksController()
-        controller.new_client(1)
-
         data = DataTask(description="task of math").to_string()
-        request = Request(RequestType.CreateTask, 1, "homework1", data)
-        response = controller.create(request)
+        request = Request(RequestType.CreateTask, self.cid, "homework1", data)
+        response = self.controller.create(request, self.etcd)
 
         data = DataTask(description="task of histoy").to_string()
-        request = Request(RequestType.CreateTask, 1, "homework2", data)
-        response = controller.create(request)
+        request = Request(RequestType.CreateTask, self.cid, "homework2", data)
+        response = self.controller.create(request, self.etcd)
 
-        request = Request(RequestType.DeleteAllTasks, 1, None, None)
-        response = controller.delete_all(request)
+        request = Request(RequestType.DeleteAllTasks, self.cid, None, None)
+        response = self.controller.delete_all(request, self.etcd)
 
         self.assertTrue(response.status == ResponseType.Sucess, response.data)
-        self.assertIn(1, controller.data)
-        self.assertNotIn("homework1", controller.data[1])
-        self.assertNotIn("homework2", controller.data[1])
+        self.assertIn(self.cid, self.controller.data)
+        self.assertNotIn("homework1", self.controller.data[self.cid])
+        self.assertNotIn("homework2", self.controller.data[self.cid])
 
 if __name__ == '__main__':
     unittest.main()

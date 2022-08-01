@@ -1,5 +1,5 @@
 import admin.interface as client
-from others.net import connect_one, portal_admin_addrs
+from others.net import tcp_connect
 from others.response import ResponseType
 
 def handle_admin(stream):
@@ -30,7 +30,7 @@ def handle_admin(stream):
        
 
 def main():
-    stream = connect_one(portal_admin_addrs())
+    stream = tcp_connect()
     if stream:
         handle_admin(stream)
     else:
