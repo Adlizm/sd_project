@@ -1,5 +1,5 @@
 import sys
-import etcd3
+import plyvel
 
 sys.path.append('.')
 
@@ -8,80 +8,83 @@ from others.response import Response, ResponseType
 from others.request import Request, RequestType
 
 class ClientController():
-    def __init__(self):
-        self.data = {}
+    def hashcode(data: str):
+        PRIME = 18446744069414584321
+        BASE = 5926535897
+
+        acc = 1
+        hashcode = 9471413089
+        for char in bytes(data, 'utf-8'):
+            acc = (acc * BASE) % PRIME
+            hashcode = (hashcode + char * acc) % PRIME
+        return hashcode
+
+    def __init__(self, db: plyvel.DB):
+        self.db = db
     
-    def create(self, req: Request, etcd: etcd3.Etcd3Client) -> Response:
+    def create(self, req: Request) -> Response:
         if req.req != RequestType.CreateClient:
             return Response(ResponseType.Error, 'Invalid Resquest')
         if req.body == None:
             return Response(ResponseType.Error, 'Incomplet argumets')
-        if isinstance(etcd, etcd3.Etcd3Client):
-            return Response(ResponseType.Error, 'Invalid client etcd')
         
         try:
             data_client = DataClient.from_string(req.body)  
         except Exception as e:
             return Response(ResponseType.Error, str(e))
 
-        cid = abs(hash(req.body))
-        while etcd.get('/{}'.format(cid)) != (None, None):
+        cid = ClientController.hashcode(req.body)
+        while self.db.get(bytes(f'/{cid}', 'utf-8')) != None:
             cid += 1
 
-        self.data[cid] = data_client                               # create in cache
-        etcd.put('/{}'.format(cid), str(req.body).encode('utf-8')) # create in etcd
-        return Response(ResponseType.Sucess, f'Client created with sucess! Cid: {cid}')
+        try:
+            self.db.put(bytes(f'/{cid}', 'utf-8'), bytes(req.body, 'utf-8'))
+            return Response(ResponseType.Sucess, f'Client created with sucess! Cid: {cid}')
+        except Exception as e:
+            return Response(ResponseType.Error, str(e))
 
-    def update(self, req: Request, etcd: etcd3.Etcd3Client) -> Response:
+    def update(self, req: Request) -> Response:
         if req.req != RequestType.UpdateClient:
             return Response(ResponseType.Error, 'Invalid Resquest')
         if req.body == None or req.cid == None:
             return Response(ResponseType.Error, 'Incomplet argumets')
-        if isinstance(etcd, etcd3.Etcd3Client):
-            return Response(ResponseType.Error, 'Invalid client etcd')
 
         try:
             data_client = DataClient.from_string(req.body)
         except Exception as e:
             return Response(ResponseType.Error, str(e))
 
-        if etcd.get('/{}'.format(req.cid)) != (None, None):
-            self.data[req.cid] = data_client               # update in cache
-            etcd.put('/{}'.format(req.cid), req.body)      # update in etcd
-            return Response(ResponseType.Sucess, 'Client updated with sucess')
+        cid = req.cid
+        if self.db.get(bytes(f'/{cid}', 'utf-8')):
+            try:
+                self.db.put(bytes(f'/{cid}', 'utf-8'), bytes(req.body, 'utf-8'))
+                return Response(ResponseType.Sucess, 'Client updated with sucess')
+            except Exception as e:
+                return Response(ResponseType.Error, str(e))
         return Response(ResponseType.Error, 'Client not found')
 
-    def get(self, req: Request, etcd: etcd3.Etcd3Client) -> Response:
+    def get(self, req: Request) -> Response:
         if req.req != RequestType.GetClient:
             return Response(ResponseType.Error, 'Invalid Resquest')
         if req.cid == None:
             return Response(ResponseType.Error, 'Incomplet argumets')
-        if isinstance(etcd, etcd3.Etcd3Client):
-            return Response(ResponseType.Error, 'Invalid client etcd')
-
-        # try get from cache
-        if req.cid in self.data:
-            data_client = self.data[req.cid]                # get from cache
-            return Response(ResponseType.Sucess, DataClient.to_string(data_client))
         
-        # try get from etcd
-        value, _ = etcd.get('/{}'.format(req.cid))
+        cid = req.cid
+        value = self.db.get(bytes(f'/{cid}', 'utf-8'))
         if value:
-            value = str(value, encoding='utf-8')
-            self.data[req.cid] = value
+            value = str(value, 'utf-8')
             return Response(ResponseType.Sucess, value)
         return Response(ResponseType.Error, 'Client not found')
 
-    def delete(self, req: Request, etcd: etcd3.Etcd3Client) -> Response:
+    def delete(self, req: Request) -> Response:
         if req.req != RequestType.DeleteClient:
             return Response(ResponseType.Error, 'Invalid Resquest')
         if req.cid == None:
             return Response(ResponseType.Error, 'Incomplet argumets')
-        if isinstance(etcd, etcd3.Etcd3Client):
-            return Response(ResponseType.Error, 'Invalid client etcd')
 
-        if req.cid in self.data:
-            del self.data[req.cid]              # delete in cache
-        if etcd.delete('/{}'.format(req.cid)):  # delete in etcd
-            return Response(ResponseType.Sucess, 'Client deleted with sucess');
-        return Response(ResponseType.Error, 'Client not found')
+        cid = req.cid                  
+        try:
+            self.db.delete(bytes(f'/{cid}', 'utf-8'))
+            return Response(ResponseType.Sucess, 'Client deleted with sucess')
+        except Exception as e:
+            return Response(ResponseType.Error, 'Client not found')

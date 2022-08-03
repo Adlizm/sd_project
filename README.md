@@ -1,60 +1,75 @@
+
 # sd_project
 Um simples projeto cliente-servidor para usar os conhecimentos sobre sistemas distribuídos
 
+  
+
 ## Executando o projeto
+
 - Clone o projeto
+
 ```bash
-  git clone https://github.com/Adlizm/sd_project.git
-  cd sd_project
+git clone https://github.com/Adlizm/sd_project.git
+cd sd_project
 ```
 
 ### Preparando o ambiente
 
-- Instale a dependencia python-etcd3
+- Instale a dependencia pysyncobj
+
 ```bash
-  pip3 install git+https://github.com/kragniz/python-etcd3.git
+pip3 install pysyncobj
 ```
 
-- Caso não possua o etcd instalado, siga as instruções de instalação em:
-  https://etcd.io/docs/v3.6/install/
+- Instale a dependencia plyvel, caso esteja em sistemas Linux/Ubuntu, basta que execute:
 ```bash
-  etcd --version
+pip3 install plyvel
 ```
 
-- Em terminais diferentes execute (disponivel em etcd_commands):
+- Caso contrário, você deverá ter instalado previamente o LevelDB, siga as instruções em: https://github.com/google/leveldb
+
+  
+
+### Iniciando Replicas
+
+- Em terminais diferentes execute:
+
 ```bash
-  etcd --name replica1 --data-dir /temp/etcd/replica1 --listen-client-urls http://localhost:12379 --advertise-client-urls http://localhost:12379 --listen-peer-urls http://localhost:12380 --initial-advertise-peer-urls http://localhost:12380 --initial-cluster replica1=http://localhost:12380,replica2=http://localhost:22380,replica3=http://localhost:32380 --initial-cluster-token tkn --initial-cluster-state new
+python ./src/start_replica.py repl1
 ```
 ```bash
-  etcd --name replica2 --data-dir /temp/etcd/replica2 --listen-client-urls http://localhost:22379 --advertise-client-urls http://localhost:22379 --listen-peer-urls http://localhost:22380 --initial-advertise-peer-urls http://localhost:22380 --initial-cluster replica1=http://localhost:12380,replica2=http://localhost:22380,replica3=http://localhost:32380 --initial-cluster-token tkn --initial-cluster-state new
+python ./src/start_replica.py repl2
 ```
 ```bash
-  etcd --name replica3 --data-dir /temp/etcd/replica3 --listen-client-urls http://localhost:32379 --advertise-client-urls http://localhost:32379 --listen-peer-urls http://localhost:32380 --initial-advertise-peer-urls http://localhost:32380 --initial-cluster replica1=http://localhost:12380,replica2=http://localhost:22380,replica3=http://localhost:32380 --initial-cluster-token tkn --initial-cluster-state new
+python ./src/start_replica.py repl3
 ```
 
-### Inicializando projeto
+  
+
+## Inicializando projeto
 
 - Em diferentes terminais, inicialize os portais
+
 ```bash
-  python ./src/admin_portal.py
-  python ./src/client_portal.py
+python ./src/admin_portal.py
+python ./src/client_portal.py
 ```
 
 - Em diferentes terminais, inicialize as interfaces
+
 ```bash
-  python ./src/admin_cli.py
-  python ./src/client_cli.py
+python ./src/admin_cli.py
+python ./src/client_cli.py
 ```
-## Rodando os testes
+
+## Executando os testes
 
 Para rodar os testes, rode o seguinte comando
-
 ```bash
-  python ./test.py
+python ./test.py
 ```
 
 ## Funcionalidades
-
 - [x] Interface do Client com o Portal
 - [x] Interface do Administrador com o Portal
 - [x] Portal do Administrador
@@ -62,10 +77,11 @@ Para rodar os testes, rode o seguinte comando
 
 - [x] Testes Automatizados
 - [x] Replica consistente dos dados
-- [x] Portais com Cache Local
-- [x] Suporte a múltiplos portais 
+- [x] Portais com Cache Local (30 segundos de tempo de vida)
+- [x] Suporte a múltiplos portais
 
+  
 ### Mecanismos de Comunicação
 - Comunicação entre cliente e portal via sockets
 - Comunicação entre admin e portal via sockets
-
+- Comunicação entre portais e replicas via sockets

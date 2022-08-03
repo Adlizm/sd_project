@@ -1,0 +1,2 @@
+Directory to save replica data
+Diretorio para salvar os dados das replicas

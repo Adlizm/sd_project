@@ -1,1 +1,6 @@
 __pycache__/
+
+tmp/tests/
+tmp/repl1/
+tmp/repl2/
+tmp/repl3/
