@@ -63,7 +63,7 @@ class TasksController():
         
         cid = req.cid
         tasks_list = ''
-        if self.db.get('/{}'.format(req.cid)):
+        if self.db.get(bytes(f'/{cid}', 'utf-8')):
             for name, data in self.db.iterator(prefix=bytes(f'/{cid}/', 'utf-8')):
                 name, data = str(name, 'utf-8').split('/')[-1], str(data, 'utf-8')
                 tasks_list += f'\n{name} - {data}'

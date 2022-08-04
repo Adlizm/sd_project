@@ -9,19 +9,24 @@ from replica.config import REPLICAS_SOCKET_ADDRS, REPLICAS_PARAMETERS
 
 
 lock = threading.Lock()
+replica = None
 
-def handle_portal_requests(stream, client, replica):
+def handle_portal_requests(stream, client):
+    global replica
+
     print(f'Connect {client} with sucess! ')
     while True:
-        buffer: bytes = stream.recv(DATA_PAYLOAD)
-        if not buffer:
-            break
         try:
+            buffer: bytes = stream.recv(DATA_PAYLOAD)
+            if not buffer:
+                break
+                
             buffer = buffer.decode('utf-8')
             print(f'Reciving request from {client}! {buffer}')
 
             request = Request.from_string(buffer)
-            response = replica.send(request, sync=True)
+            with lock:
+                response = replica.send(request, sync=True)
             
             print('Response obtained')
             str_response = response.to_string()
@@ -33,6 +38,8 @@ def handle_portal_requests(stream, client, replica):
     print(f'Disconnect {client} with sucess! ')
 
 def main():
+    global replica
+
     if len(sys.argv) != 2:
         print("Usage %replica_name \{repl1, repl2, repl3\}")
         return
@@ -48,8 +55,11 @@ def main():
 
     print('Bind concluded with sucess! Waiting for requests...')
     while True:
-        stream, client = tcp.accept()
-        threading.Thread(target=handle_portal_requests, args=(stream, client, replica)).start()
+        try:
+            stream, client = tcp.accept()
+            threading.Thread(target=handle_portal_requests, args=(stream, client)).start()
+        except:
+            pass
     
 if __name__ == '__main__':
     main()

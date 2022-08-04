@@ -4,10 +4,10 @@ class Cache():
     def __init__(self):
         self.data = {}
 
-    def put(request, response):
+    def put(self, request, response):
         self.data[request] = (response, time.time_ns())
 
-    def get(request):
+    def get(self, request):
         if request in self.data:
             dt = time.time_ns() - self.data[request][1]
             if dt > Cache.LIFETIME_IN_NANSECS:

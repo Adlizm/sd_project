@@ -38,9 +38,10 @@ def handle_client(stream, client, replica_stream, cache):
                 except:
                     pass
 
-            stream.send(response)
-            str_response = str(response, 'uft-8')
-            print(f'Sending response to {client}! {str_response}')
+            if response:
+                stream.send(response)
+                str_response = str(response, 'utf-8')
+                print(f'Sending response to {client}! {str_response}')
         else:
             stream.send(b'Invalid request, try connect on admin portal')
                         
@@ -65,7 +66,10 @@ def main():
 
     print('Waiting from connections...')
     while True:
-        stream, client = tcp.accept()
-        threading.Thread(target=handle_admin, args=(stream, client, replica_stream, cache)).start()
+        try:
+            stream, client = tcp.accept()
+            threading.Thread(target=handle_client, args=(stream, client, replica_stream, cache)).start()
+        except:
+            pass
 
 main()

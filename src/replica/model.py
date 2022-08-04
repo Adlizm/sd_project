@@ -11,11 +11,12 @@ from pysyncobj import SyncObj, SyncObjConf, replicated
 
 class Replica(SyncObj):
     def __init__(self, name, addrs, partners):
-        super(Replica, self).__init__(addrs, partners)
+        cfg = SyncObjConf(logCompactionMinEntries = 50000, logCompactionMinTime = 30000)
+        super(Replica, self).__init__(addrs, partners, cfg)
 
-        self.__db = plyvel.DB(f'./tmp/{name}/', create_if_missing=True)
-        self.__client_controller = ClientController(self.__db)
-        self.__task_controller = TasksController(self.__db)
+        db = plyvel.DB(f'./tmp/{name}/', create_if_missing=True)
+        self.__client_controller = ClientController(db)
+        self.__task_controller = TasksController(db)
 
     @replicated
     def send(self, request):
