@@ -1,22 +1,44 @@
 import socket
-import socket
+import random
 
-def tcp_bind() -> socket.socket:
-    try:
-        port = int(input("Port to bind: "));
-        stream = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        stream.settimeout(10)
-        stream.bind(('localhost', port));
-    except:
-        return None
-    return stream;
+def portal_client_addrs(): 
+    return [ ('localhost', 4000), ('localhost', 4001) ]
 
-def tcp_connect() -> socket.socket:
-    try:
-        port = int(input("Port to connect: "));
-        stream = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        stream.settimeout(10)
-        stream.connect(('localhost', port));
-    except:
+def portal_admin_addrs():
+    return [ ('localhost', 5000), ('localhost', 5001) ]
+
+def bind_one(addrs) -> socket.socket:
+    tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    
+    bind = False
+    for addr in addrs:
+        try:
+            tcp.bind(addr)
+        except:
+            continue
+        finally:
+            bind = True
+    if not bind:
         return None
-    return stream;
+    
+    tcp.listen(10)
+    return tcp
+
+def connect_one(addrs: list) -> socket.socket:
+    tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    tcp.settimeout(10)
+    
+    connected = False
+    for _ in range(len(addrs)):
+        try:
+            addr = random.choice(addrs)
+            tcp.connect(addr)
+        except:
+            addrs.remove(addr)
+            continue
+        finally:
+            connected = True
+    if not connected:
+        return None
+
+    return tcp

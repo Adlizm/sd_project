@@ -1,5 +1,5 @@
 import client.interface as task
-from others.net import tcp_connect
+from others.net import connect_one, portal_client_addrs
 from others.response import ResponseType
 
 def handle_client(stream):
@@ -32,7 +32,7 @@ def handle_client(stream):
        
 
 def main():
-    stream = tcp_connect()
+    stream = connect_one(portal_client_addrs())
     if stream:
         handle_client(stream)
     else:
